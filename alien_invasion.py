@@ -16,7 +16,7 @@ class AlienInvasion:
     def __init__(self) -> None:
         """Initialize the game, and create game resources."""
         pygame.init()
-        
+
         self.clock = pygame.time.Clock()
         self.settings = Settings()
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
@@ -57,15 +57,15 @@ class AlienInvasion:
     def _check_events(self):
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    sys.exit()
-                elif event.type == pygame.KEYDOWN:
-                    self._check_keydown_events(event)
-                elif event.type == pygame.KEYUP:
-                    self._check_keyup_events(event)
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    mouse_pos = pygame.mouse.get_pos()
-                    self._check_play_button(mouse_pos)
+            if event.type == pygame.QUIT:
+                sys.exit()
+            elif event.type == pygame.KEYDOWN:
+                self._check_keydown_events(event)
+            elif event.type == pygame.KEYUP:
+                self._check_keyup_events(event)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_pos = pygame.mouse.get_pos()
+                self._check_play_button(mouse_pos)
 
     def _check_play_button(self, mouse_pos):
         """checks if the play button was clicked"""
@@ -73,19 +73,24 @@ class AlienInvasion:
         if button_clicked and not self.game_active:
             self.settings.init_dynamic_settings()
             self.stats.reset_stats()
-            self.sb.prep_score()
-            self.sb.prep_level()
-            self.sb.prep_ships()
+            self._prep_scoreboard()
             self.game_active = True
 
-            self.bullets.empty()
-            self.aliens.empty()
+            self._reset_aliens_and_ship()
 
-            self._create_fleet()
-            self.ship.center_ship()
-            
             # hide the mouse cursor
             pygame.mouse.set_visible(False)
+
+    def _reset_aliens_and_ship(self):
+        self.bullets.empty()
+        self.aliens.empty()
+        self._create_fleet()
+        self.ship.center_ship()
+
+    def _prep_scoreboard(self):
+        self.sb.prep_score()
+        self.sb.prep_level()
+        self.sb.prep_ships()
 
     def _check_keydown_events(self, event):
         """Respond to keypress"""
@@ -111,7 +116,7 @@ class AlienInvasion:
         if len(self.bullets) < self.settings.bullets_allowed:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
-    
+
     def _update_bullets(self):
         """Update position of bullets and get rid of old bullets"""
 
@@ -120,12 +125,12 @@ class AlienInvasion:
         for bullet in self.bullets.copy():
             if bullet.rect.bottom <= 0:
                 self.bullets.remove(bullet)
-        
+
         self._check_bullet_alien_collisions()
         self._check_if_fleet_destroyed()
 
-        
-    
+
+
     def _check_bullet_alien_collisions(self):
         """Remove any bullets and aliens that have collided"""
         collisions = pygame.sprite.groupcollide(self.bullets, self.aliens, False, True)
@@ -160,9 +165,9 @@ class AlienInvasion:
 
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
-        
+
         self.screen.fill(self.settings.bg_colour)
-        
+
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
         self.ship.blitme()
@@ -188,12 +193,15 @@ class AlienInvasion:
 
         current_x, current_y = alien_width, alien_height
         while current_y < (self.settings.screen_height - 3 * alien_height):
-            while current_x < (self.settings.screen_width - 2 * alien_width):
-                self._create_alien(current_x, current_y)
-                current_x += 2 * alien_width
+            self._create_row_of_aliens(alien_width, current_x, current_y)
             # Finished a row, reset x and increment y
             current_x = alien_width
             current_y += 2 * alien_height
+
+    def _create_row_of_aliens(self, alien_width, current_x, current_y):
+        while current_x < (self.settings.screen_width - 2 * alien_width):
+            self._create_alien(current_x, current_y)
+            current_x += 2 * alien_width
 
     def _create_alien(self, x_position, y_position):
         """Create an alien and place it in the row"""
@@ -209,7 +217,7 @@ class AlienInvasion:
             if alien.check_edges():
                 self._change_fleet_direction()
                 break
-    
+
     def _change_fleet_direction(self):
         """Drop the entire fleet and change the fleet's direction."""
         for alien in self.aliens.sprites():
@@ -224,11 +232,7 @@ class AlienInvasion:
             self.sb.prep_ships()
 
             # Get rid of any remaining bullets and aliens
-            self.bullets.empty()
-            self.aliens.empty()
-
-            self._create_fleet()
-            self.ship.center_ship()
+            self._reset_aliens_and_ship()
             sleep(0.5)
         else:
             self.game_active = False
@@ -242,9 +246,8 @@ class AlienInvasion:
                 self._ship_hit()
                 break
 
-    
+
 if __name__ == '__main__':
     # Make a game instance, and run the game
     ai = AlienInvasion()
     ai.run_game()
-
