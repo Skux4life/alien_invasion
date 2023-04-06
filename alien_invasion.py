@@ -9,6 +9,7 @@ from bullet import Bullet
 from game_stats import GameStats
 from button import Button
 from scoreboard import Scoreboard
+import constants
 
 class AlienInvasion:
     """Overall class to manage game assets and behaviour"""
@@ -58,6 +59,7 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                self._save_high_score()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
                 self._check_keydown_events(event)
@@ -101,7 +103,13 @@ class AlienInvasion:
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         elif event.key == pygame.K_q:
+            self._save_high_score()
             sys.exit()
+
+    def _save_high_score(self):
+        """Saves the high score to a txt file"""
+        with open(constants.HIGH_SCORE_FILE, 'w') as f:
+            f.write(str(self.stats.high_score))
 
     def _check_keyup_events(self, event):
         """Respond to key releases"""
